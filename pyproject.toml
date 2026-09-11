@@ -1,0 +1,30 @@
+[project]
+name = "lg-remote"
+version = "0.1.0"
+description = "Télécommande TUI pour TV LG webOS (bscpylgtv + Textual)."
+requires-python = ">=3.10"
+dependencies = [
+    "textual>=8.0",
+    "bscpylgtv>=0.5.4",
+    "tomlkit>=0.12",
+]
+
+[project.scripts]
+lg-remote = "lg_remote.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lg_remote"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
