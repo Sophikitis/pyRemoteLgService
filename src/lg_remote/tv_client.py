@@ -94,3 +94,93 @@ class TVClient:
         if self._client is not None:
             await self._client.disconnect()
             self._client = None
+
+    def _require_connected(self) -> None:
+        if self._client is None:
+            raise TVConnectionError("Not connected to the TV")
+
+    def _log(self, description: str) -> None:
+        self.command_log.append(description)
+        del self.command_log[:-20]
+
+    async def _button(self, name: str) -> None:
+        self._require_connected()
+        await self._client.button(name)
+        self._log(f"button {name}")
+
+    async def power(self) -> None:
+        self._require_connected()
+        await self._client.power_off()
+        self._log("power_off")
+
+    async def home(self) -> None:
+        await self._button("HOME")
+
+    async def back(self) -> None:
+        await self._button("BACK")
+
+    async def exit(self) -> None:
+        await self._button("EXIT")
+
+    async def nav_up(self) -> None:
+        await self._button("UP")
+
+    async def nav_down(self) -> None:
+        await self._button("DOWN")
+
+    async def nav_left(self) -> None:
+        await self._button("LEFT")
+
+    async def nav_right(self) -> None:
+        await self._button("RIGHT")
+
+    async def ok(self) -> None:
+        await self._button("ENTER")
+
+    async def mute(self) -> None:
+        await self._button("MUTE")
+
+    async def info(self) -> None:
+        await self._button("INFO")
+
+    async def input_source(self) -> None:
+        await self._button("INPUT_HUB")
+
+    async def volume_up(self) -> None:
+        self._require_connected()
+        await self._client.volume_up()
+        self._log("volume_up")
+
+    async def volume_down(self) -> None:
+        self._require_connected()
+        await self._client.volume_down()
+        self._log("volume_down")
+
+    async def channel_up(self) -> None:
+        self._require_connected()
+        await self._client.channel_up()
+        self._log("channel_up")
+
+    async def channel_down(self) -> None:
+        self._require_connected()
+        await self._client.channel_down()
+        self._log("channel_down")
+
+    async def netflix(self) -> None:
+        self._require_connected()
+        await self._client.launch_app("netflix")
+        self._log("launch_app netflix")
+
+    async def open_in_start(self) -> None:
+        self._require_connected()
+        await self._client.launch_app_with_params(
+            "com.webos.app.factorywin", {"id": "executeFactory", "irKey": "inStart"}
+        )
+        self._log("launch_app_with_params factorywin inStart")
+
+    async def open_ez_adjust(self) -> None:
+        self._require_connected()
+        await self._client.launch_app_with_params(
+            "com.webos.app.factorywin", {"id": "executeFactory", "irKey": "ezAdjust"}
+        )
+        self._log("launch_app_with_params factorywin ezAdjust")

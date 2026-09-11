@@ -114,3 +114,100 @@ def test_all_exceptions_are_tv_connection_errors():
     assert issubclass(TVUnreachableError, TVConnectionError)
     assert issubclass(TVTimeoutError, TVConnectionError)
     assert issubclass(TVPairingTimeoutError, TVConnectionError)
+
+
+def _connected_client():
+    tv = TVClient("192.168.1.10")
+    fake_client = AsyncMock()
+    tv._client = fake_client
+    return tv, fake_client
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "button_name"),
+    [
+        ("home", "HOME"),
+        ("back", "BACK"),
+        ("exit", "EXIT"),
+        ("nav_up", "UP"),
+        ("nav_down", "DOWN"),
+        ("nav_left", "LEFT"),
+        ("nav_right", "RIGHT"),
+        ("ok", "ENTER"),
+        ("mute", "MUTE"),
+        ("info", "INFO"),
+        ("input_source", "INPUT_HUB"),
+    ],
+)
+async def test_button_based_actions_send_the_right_button(method_name, button_name):
+    tv, fake_client = _connected_client()
+
+    await getattr(tv, method_name)()
+
+    fake_client.button.assert_awaited_once_with(button_name)
+    assert tv.command_log[-1] == f"button {button_name}"
+
+
+@pytest.mark.asyncio
+async def test_power_calls_power_off():
+    tv, fake_client = _connected_client()
+    await tv.power()
+    fake_client.power_off.assert_awaited_once()
+    assert tv.command_log[-1] == "power_off"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "bscpylgtv_method"),
+    [
+        ("volume_up", "volume_up"),
+        ("volume_down", "volume_down"),
+        ("channel_up", "channel_up"),
+        ("channel_down", "channel_down"),
+    ],
+)
+async def test_dedicated_methods_are_forwarded(method_name, bscpylgtv_method):
+    tv, fake_client = _connected_client()
+    await getattr(tv, method_name)()
+    getattr(fake_client, bscpylgtv_method).assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_netflix_launches_the_netflix_app():
+    tv, fake_client = _connected_client()
+    await tv.netflix()
+    fake_client.launch_app.assert_awaited_once_with("netflix")
+
+
+@pytest.mark.asyncio
+async def test_open_in_start_uses_factorywin_with_instart_irkey():
+    tv, fake_client = _connected_client()
+    await tv.open_in_start()
+    fake_client.launch_app_with_params.assert_awaited_once_with(
+        "com.webos.app.factorywin", {"id": "executeFactory", "irKey": "inStart"}
+    )
+
+
+@pytest.mark.asyncio
+async def test_open_ez_adjust_uses_factorywin_with_ezadjust_irkey():
+    tv, fake_client = _connected_client()
+    await tv.open_ez_adjust()
+    fake_client.launch_app_with_params.assert_awaited_once_with(
+        "com.webos.app.factorywin", {"id": "executeFactory", "irKey": "ezAdjust"}
+    )
+
+
+@pytest.mark.asyncio
+async def test_action_without_connection_raises_tv_connection_error():
+    tv = TVClient("192.168.1.10")
+    with pytest.raises(TVConnectionError):
+        await tv.home()
+
+
+@pytest.mark.asyncio
+async def test_command_log_is_capped_at_twenty_entries():
+    tv, _fake_client = _connected_client()
+    for _ in range(25):
+        await tv.home()
+    assert len(tv.command_log) == 20
