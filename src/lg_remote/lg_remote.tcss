@@ -1,0 +1,116 @@
+Screen {
+    background: $background;
+    color: $text;
+}
+
+#status-bar {
+    dock: top;
+    height: 3;
+    padding: 0 2;
+    background: $panel;
+    border: round $primary;
+    content-align: left middle;
+}
+
+#status-bar.-connected {
+    border: round $success;
+}
+
+#status-bar.-disconnected {
+    border: round $error;
+}
+
+.section-title {
+    color: $text-muted;
+    text-style: bold;
+    padding: 1 0 0 1;
+}
+
+.help-text {
+    color: $text-muted;
+    padding: 0 1;
+}
+
+.error-text {
+    color: $error;
+    text-style: bold;
+    padding: 0 1;
+}
+
+#top-row, #quick-apps-row {
+    layout: horizontal;
+    height: 5;
+    align: center middle;
+    padding: 1 2;
+}
+
+#top-row Button, #quick-apps-row Button {
+    width: 1fr;
+    height: 3;
+    margin: 0 1;
+    border: round $primary;
+}
+
+#dpad {
+    align: center middle;
+    height: auto;
+    padding: 1 2;
+}
+
+#dpad Button {
+    border: round $primary;
+    min-width: 7;
+    margin: 0 1;
+}
+
+#dpad Horizontal {
+    align: center middle;
+    height: 3;
+}
+
+#vol-channel-row {
+    layout: horizontal;
+    height: 9;
+    padding: 1 2;
+}
+
+#vol-channel-row Vertical {
+    width: 1fr;
+    align: center middle;
+    border: round $secondary;
+    margin: 0 1;
+}
+
+#vol-channel-row Button {
+    width: 100%;
+    height: 3;
+}
+
+#setup-form, #service-form, #settings-form, #confirm-box {
+    padding: 1 2;
+    border: round $primary;
+    margin: 1 2;
+}
+
+#ip-input {
+    width: 40;
+    margin: 1 0;
+}
+
+.danger-zone {
+    border: round $error;
+    padding: 1 2;
+    margin: 1 0;
+}
+
+.danger-zone Button {
+    background: $error;
+    margin: 0 1 1 0;
+}
+
+#log-panel {
+    height: 8;
+    border: round $secondary;
+    padding: 1;
+    overflow-y: auto;
+}
