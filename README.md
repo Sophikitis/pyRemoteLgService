@@ -42,7 +42,7 @@ affiche directement l'écran de configuration.
    Réseau, sur la TV).
 2. Clique sur "Tester la connexion".
 3. Si c'est la première fois que cette app se connecte à la TV, un popup
-   d'autorisation apparaît sur l'écran de la TV — accepte-lo. L'app attend
+   d'autorisation apparaît sur l'écran de la TV — accepte-le. L'app attend
    jusqu'à 60 secondes.
 4. Une fois connecté, l'IP est enregistrée dans
    `~/.config/lg-remote/config.toml` et l'app bascule sur l'écran de
