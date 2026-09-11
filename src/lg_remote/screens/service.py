@@ -36,13 +36,19 @@ class ServiceScreen(Screen):
             yield Button("EZ-ADJUST", id="ez-adjust", variant="primary")
             yield Button("EXIT (sortir du menu)", id="service-exit", variant="success")
 
+    def action_pop_screen(self) -> None:
+        # Screen doesn't inherit App's action_pop_screen for its own
+        # BINDINGS dispatch — without this, the "escape" binding above
+        # silently does nothing (verified against the installed Textual).
+        self.app.pop_screen()
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "in-start":
             self.run_worker(self._send("open_in_start"), group="tv-command")
         elif event.button.id == "ez-adjust":
             self.run_worker(self._send("open_ez_adjust"), group="tv-command")
         elif event.button.id == "service-exit":
-            self.run_worker(self._send("exit"), group="tv-command")
+            self.run_worker(self._send_exit(), group="tv-command")
 
     async def _send(self, method_name: str) -> None:
         tv_client = self.app.tv_client
@@ -55,3 +61,9 @@ class ServiceScreen(Screen):
             self.app.notify("TV injoignable", severity="error")
             return
         self.app.notify(method_name.replace("_", " "), timeout=1.5)
+
+    async def _send_exit(self) -> None:
+        # EXIT means both things: tell the TV to close its on-screen
+        # factory menu, and leave this screen back to the main remote.
+        await self._send("exit")
+        self.app.pop_screen()

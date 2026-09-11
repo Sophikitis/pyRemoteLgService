@@ -85,4 +85,18 @@ async def test_exit_button_calls_tv_client_exit_never_in_stop():
             service_screen.query_one("#in-stop")
         await pilot.click("#service-exit")
         await pilot.pause()
+        assert isinstance(app.screen, RemoteScreen)
     tv_client.exit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_escape_pops_back_to_remote_screen():
+    tv_client = AsyncMock()
+    app = _HostApp(tv_client=tv_client)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app.push_screen(ServiceScreen())
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+        assert isinstance(app.screen, RemoteScreen)
