@@ -37,6 +37,10 @@ Screen {
     padding: 0 1;
 }
 
+#setup-message, #current-ip {
+    padding: 0 1;
+}
+
 #top-row, #quick-apps-row {
     layout: horizontal;
     height: 5;
