@@ -2,7 +2,7 @@
 name = "lg-remote"
 version = "0.1.0"
 description = "Télécommande TUI pour TV LG webOS (bscpylgtv + Textual)."
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
     "textual>=8.0",
     "bscpylgtv>=0.5.4",
