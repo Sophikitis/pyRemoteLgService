@@ -15,6 +15,8 @@ dommage du calibrage de la dalle) si tu ne sais pas précisément ce qu'ils
 font. N'utilise ces fonctions que si tu es certain·e de leur effet — voir
 aussi "Limitations connues" plus bas.
 
+![Menu service, avec avertissement](docs/images/service-screen.png)
+
 ## Installation
 
 Ce projet s'installe dans un environnement virtuel Python (venv), pour ne
