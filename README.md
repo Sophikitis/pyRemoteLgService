@@ -3,6 +3,8 @@
 Télécommande TUI (Textual) pour une TV LG webOS sur le réseau local, basée
 sur [`bscpylgtv`](https://github.com/chros73/bscpylgtv).
 
+![Écran de télécommande](docs/images/screenshot.png)
+
 ## ⚠ Phase bêta
 
 Ce projet est en phase bêta. Au lancement, l'app affiche un écran
