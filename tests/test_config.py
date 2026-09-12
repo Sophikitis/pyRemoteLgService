@@ -60,3 +60,23 @@ def test_load_raises_config_error_when_tv_ip_invalid(tmp_path):
 
     with pytest.raises(ConfigError):
         Config.load(path)
+
+
+def test_numbers_enabled_defaults_to_true():
+    assert Config(tv_ip="192.168.1.42").numbers_enabled is True
+
+
+def test_load_defaults_numbers_enabled_to_true_when_key_missing(tmp_path):
+    path = tmp_path / "config.toml"
+    path.write_text('tv_ip = "192.168.1.42"\n')
+
+    assert Config.load(path).numbers_enabled is True
+
+
+def test_save_then_load_round_trips_numbers_enabled_false(tmp_path):
+    path = tmp_path / "config.toml"
+    Config(tv_ip="192.168.1.42", numbers_enabled=False).save(path)
+
+    loaded = Config.load(path)
+
+    assert loaded.numbers_enabled is False

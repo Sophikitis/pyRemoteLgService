@@ -28,6 +28,7 @@ class ConfigError(Exception):
 class Config:
     tv_ip: str
     client_name: str = DEFAULT_CLIENT_NAME
+    numbers_enabled: bool = True
 
     @classmethod
     def load(cls, path: Path = DEFAULT_CONFIG_PATH) -> "Config | None":
@@ -51,7 +52,8 @@ class Config:
             raise ConfigError(f"'{tv_ip}' dans {path} n'est pas une IPv4 valide.")
 
         client_name = str(document.get("client_name", DEFAULT_CLIENT_NAME))
-        return cls(tv_ip=tv_ip, client_name=client_name)
+        numbers_enabled = bool(document.get("numbers_enabled", True))
+        return cls(tv_ip=tv_ip, client_name=client_name, numbers_enabled=numbers_enabled)
 
     def save(self, path: Path = DEFAULT_CONFIG_PATH) -> None:
         """Write this config to path, creating parent directories as needed."""
@@ -59,4 +61,5 @@ class Config:
         document = tomlkit.document()
         document["tv_ip"] = self.tv_ip
         document["client_name"] = self.client_name
+        document["numbers_enabled"] = self.numbers_enabled
         path.write_text(tomlkit.dumps(document))

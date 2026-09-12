@@ -213,6 +213,9 @@ class TVClient:
     async def input_source(self) -> None:
         await self._button("INPUT_HUB")
 
+    async def number(self, digit: str) -> None:
+        await self._button(digit)
+
     async def volume_up(self) -> None:
         self._require_connected()
         await self._run_command(self._client.volume_up(), "volume_up")

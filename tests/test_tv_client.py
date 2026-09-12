@@ -248,6 +248,17 @@ async def test_open_ez_adjust_uses_factorywin_with_ezadjust_irkey():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("digit", [str(d) for d in range(10)])
+async def test_number_sends_the_digit_as_button(digit):
+    tv, fake_client = _connected_client()
+
+    await tv.number(digit)
+
+    fake_client.button.assert_awaited_once_with(digit)
+    assert tv.command_log[-1] == f"button {digit}"
+
+
+@pytest.mark.asyncio
 async def test_action_without_connection_raises_tv_connection_error():
     tv = TVClient("192.168.1.10")
     with pytest.raises(TVConnectionError):
