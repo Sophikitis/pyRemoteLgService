@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen, Screen
-from textual.widgets import Button, Static
+from textual.widgets import Button, Footer, Static
 
 from ..tv_client import TVConnectionError
 
@@ -35,6 +35,7 @@ class ServiceScreen(Screen):
             yield Button("IN-START", id="in-start", variant="primary")
             yield Button("EZ-ADJUST", id="ez-adjust", variant="primary")
             yield Button("EXIT (sortir du menu)", id="service-exit", variant="success")
+        yield Footer()
 
     def action_pop_screen(self) -> None:
         # Screen doesn't inherit App's action_pop_screen for its own

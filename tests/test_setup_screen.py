@@ -7,7 +7,12 @@ from textual.widgets import Button, Input, Static
 from lg_remote.config import Config
 from lg_remote.screens.remote import RemoteScreen
 from lg_remote.screens.setup import SetupScreen
-from lg_remote.tv_client import TVPairingTimeoutError, TVTimeoutError, TVUnreachableError
+from lg_remote.tv_client import (
+    TVPairingRejectedError,
+    TVPairingTimeoutError,
+    TVTimeoutError,
+    TVUnreachableError,
+)
 
 
 class _HostApp(App):
@@ -86,6 +91,45 @@ async def test_unreachable_tv_shows_error_and_stays_on_setup():
             message = app.screen.query_one("#setup-message", Static)
             assert "éteinte" in str(message.render())
             assert isinstance(app.screen, SetupScreen)
+
+
+@pytest.mark.asyncio
+async def test_pairing_rejected_shows_dedicated_message():
+    app = _HostApp(initial=True)
+    with patch(
+        "lg_remote.tv_client.TVClient.connect",
+        AsyncMock(side_effect=TVPairingRejectedError("refused")),
+    ):
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await _type_ip(pilot, "192.168.1.42")
+            await pilot.click("#test-button")
+            await pilot.pause()
+            await pilot.pause()
+            message = app.screen.query_one("#setup-message", Static)
+            assert "refusé" in str(message.render())
+            assert isinstance(app.screen, SetupScreen)
+
+
+@pytest.mark.asyncio
+async def test_escape_does_nothing_on_true_first_run():
+    app = _HostApp(initial=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+        assert isinstance(app.screen, SetupScreen)
+
+
+@pytest.mark.asyncio
+async def test_escape_pops_screen_when_not_initial():
+    app = _HostApp(initial=False)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert len(app.screen_stack) == 2
+        await pilot.press("escape")
+        await pilot.pause()
+        assert len(app.screen_stack) == 1
 
 
 @pytest.mark.asyncio

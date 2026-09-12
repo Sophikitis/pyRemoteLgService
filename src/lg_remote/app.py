@@ -19,11 +19,20 @@ class LGRemoteApp(App):
         )
 
     def on_mount(self) -> None:
-        if self.config is None or self.force_setup:
+        if self.config is None:
             from .screens.setup import SetupScreen
 
             self.push_screen(SetupScreen(initial=True))
-        else:
-            from .screens.remote import RemoteScreen
+            return
 
-            self.push_screen(RemoteScreen())
+        from .screens.remote import RemoteScreen
+
+        self.push_screen(RemoteScreen())
+        if self.force_setup:
+            # A RemoteScreen already exists underneath — reuse the
+            # normal "reconfigure" flow (initial=False) instead of the
+            # true-first-run one, so escape and a successful reconnect
+            # both fall back to it instead of an empty default screen.
+            from .screens.setup import SetupScreen
+
+            self.push_screen(SetupScreen(initial=False))

@@ -1,8 +1,8 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from textual.app import App
-from textual.widgets import Button, Static, Switch
+from textual.widgets import Button, Input, Static, Switch
 
 from lg_remote.config import Config
 from lg_remote.screens.remote import RemoteScreen
@@ -20,6 +20,11 @@ class _HostApp(App):
 
     def on_mount(self) -> None:
         self.push_screen(RemoteScreen())
+
+
+async def _type_ip(pilot, ip: str) -> None:
+    input_widget = pilot.app.screen.query_one("#ip-input", Input)
+    input_widget.value = ip
 
 
 @pytest.mark.asyncio
@@ -99,6 +104,45 @@ async def test_confirming_danger_toggle_reveals_zone_but_buttons_stay_disabled()
         for button_id in DANGER_BUTTON_IDS:
             button = app.screen.query_one(f"#{button_id}", Button)
             assert button.disabled is True
+
+
+@pytest.mark.asyncio
+async def test_declining_danger_toggle_confirmation_keeps_zone_hidden_and_resets_switch():
+    app = _HostApp(tv_client=AsyncMock())
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app.push_screen(SettingsScreen())
+        await pilot.pause()
+        switch = app.screen.query_one("#danger-toggle", Switch)
+        switch.toggle()
+        await pilot.pause()
+        await pilot.click("#cancel")
+        await pilot.pause()
+        assert switch.value is False
+        danger_zone = app.screen.query_one("#danger-zone")
+        assert danger_zone.display is False
+
+
+@pytest.mark.asyncio
+async def test_reconfiguring_refreshes_current_ip_on_resume(tmp_path):
+    config_path = tmp_path / "config.toml"
+    app = _HostApp(tv_client=AsyncMock())
+    with patch("lg_remote.screens.setup.DEFAULT_CONFIG_PATH", config_path), patch(
+        "lg_remote.tv_client.TVClient.connect", AsyncMock(return_value=None)
+    ), patch("lg_remote.tv_client.TVClient.disconnect", AsyncMock(return_value=None)):
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            app.push_screen(SettingsScreen())
+            await pilot.pause()
+            await pilot.click("#reconfigure-button")
+            await pilot.pause()
+            await _type_ip(pilot, "192.168.9.9")
+            await pilot.click("#test-button")
+            await pilot.pause()
+            await pilot.pause()
+            assert isinstance(app.screen, SettingsScreen)
+            current_ip = app.screen.query_one("#current-ip", Static)
+            assert "192.168.9.9" in str(current_ip.render())
 
 
 @pytest.mark.asyncio

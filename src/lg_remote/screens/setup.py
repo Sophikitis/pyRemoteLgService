@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Input, Static
+from textual.widgets import Button, Footer, Input, Static
 
 from ..config import DEFAULT_CLIENT_NAME, DEFAULT_CONFIG_PATH, Config, is_valid_ipv4
 from ..tv_client import (
     TVClient,
+    TVPairingRejectedError,
     TVPairingTimeoutError,
     TVTimeoutError,
     TVUnreachableError,
@@ -21,9 +23,23 @@ HELP_TEXT = (
 
 
 class SetupScreen(Screen):
+    BINDINGS = [Binding("escape", "cancel_setup", "Annuler", show=False)]
+
     def __init__(self, *, initial: bool = False) -> None:
         super().__init__()
         self.initial = initial
+
+    def check_action(
+        self, action: str, parameters: tuple[object, ...]
+    ) -> bool | None:
+        if action == "cancel_setup" and self.initial:
+            # True first run: there is nothing configured yet to go back
+            # to, so this binding stays hidden and inert.
+            return False
+        return True
+
+    def action_cancel_setup(self) -> None:
+        self.app.pop_screen()
 
     def compose(self) -> ComposeResult:
         with Vertical(id="setup-form"):
@@ -32,6 +48,7 @@ class SetupScreen(Screen):
             yield Input(placeholder="192.168.1.42", id="ip-input")
             yield Static("", id="setup-message")
             yield Button("Tester la connexion", id="test-button", variant="primary")
+        yield Footer()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "test-button":
@@ -66,12 +83,29 @@ class SetupScreen(Screen):
                     "[red]Autorisation non reçue sur la TV. Réessaie.[/red]"
                 )
                 return
+            except TVPairingRejectedError:
+                message.update(
+                    "[red]Appairage refusé par la TV. Réessaie.[/red]"
+                )
+                return
             except TVUnreachableError:
                 message.update("[red]TV éteinte, mauvaise IP, ou hors réseau.[/red]")
                 return
+        except TVPairingRejectedError:
+            message.update("[red]Appairage refusé par la TV. Réessaie.[/red]")
+            return
 
         message.update("[green]Connexion réussie ![/green]")
         await client.disconnect()
+
+        old_client = self.app.tv_client
+        if old_client is not None:
+            try:
+                await old_client.disconnect()
+            except Exception:
+                # Best-effort cleanup of the client we're replacing — its
+                # disconnect failing must not block saving the new config.
+                pass
 
         config = Config(tv_ip=ip, client_name=DEFAULT_CLIENT_NAME)
         config.save(DEFAULT_CONFIG_PATH)

@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
@@ -71,6 +72,38 @@ async def test_pressing_vol_up_calls_tv_client_volume_up():
         await pilot.click("#vol-up")
         await pilot.pause()
     tv_client.volume_up.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_enter_key_sends_ok_not_power():
+    tv_client = _fake_tv_client()
+    app = _HostApp(tv_client=tv_client, config=None)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause()
+    tv_client.ok.assert_awaited_once()
+    tv_client.power.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_reconnect_loop_picks_up_a_swapped_in_tv_client(monkeypatch):
+    monkeypatch.setattr(
+        "lg_remote.screens.remote.RECONNECT_INTERVAL_SECONDS", 0.01
+    )
+    old_client = _fake_tv_client()
+    app = _HostApp(tv_client=old_client, config=None)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        status = app.screen.query_one("#status-bar", Static)
+        assert "Connecté" in str(status.render())
+
+        new_client = _fake_tv_client()
+        app.tv_client = new_client
+        await asyncio.sleep(0.05)
+        await pilot.pause()
+
+    new_client.connect.assert_awaited()
 
 
 @pytest.mark.asyncio

@@ -36,7 +36,29 @@ async def test_force_setup_overrides_existing_config():
     async with app.run_test() as pilot:
         await pilot.pause()
         assert isinstance(app.screen, SetupScreen)
-        assert app.screen.initial is True
+        # Not a true first run: a RemoteScreen already exists underneath,
+        # so escape (and a successful reconnect) can fall back to it.
+        assert app.screen.initial is False
+
+
+@pytest.mark.asyncio
+async def test_force_setup_escape_falls_back_to_remote_screen():
+    app = LGRemoteApp(config=Config(tv_ip="192.168.1.50"), force_setup=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+        assert isinstance(app.screen, RemoteScreen)
+
+
+@pytest.mark.asyncio
+async def test_true_first_run_escape_does_nothing():
+    app = LGRemoteApp(config=None)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+        assert isinstance(app.screen, SetupScreen)
 
 
 def test_tv_client_is_none_without_config():

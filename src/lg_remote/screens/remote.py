@@ -7,7 +7,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.widgets import Button, Static
+from textual.widgets import Button, Footer, Static
 
 from ..tv_client import TVConnectionError
 
@@ -35,6 +35,12 @@ BUTTON_TO_METHOD = {
 
 
 class RemoteScreen(Screen):
+    # Without this, Textual auto-focuses the first focusable widget in
+    # compose() — the Power button — and a focused Button consumes Enter
+    # before this screen's BINDINGS ever see it, so Enter powers off the
+    # TV instead of sending OK (verified against the installed Textual).
+    AUTO_FOCUS = "#dpad-ok"
+
     BINDINGS = [
         Binding("up", "press_button('nav-up')", "Haut", show=False),
         Binding("down", "press_button('nav-down')", "Bas", show=False),
@@ -76,16 +82,26 @@ class RemoteScreen(Screen):
         with Horizontal(id="quick-apps-row"):
             yield Button("Netflix", id="netflix")
             yield Button("Source", id="input-source")
+        yield Footer()
 
     def on_mount(self) -> None:
         self.run_worker(self._connect_and_watch(), exclusive=True, group="connection")
 
     async def _connect_and_watch(self) -> None:
+        last_client = None
         while True:
             tv_client = self.app.tv_client
             if tv_client is None:
                 self.connected = False
                 return
+            if tv_client is not last_client:
+                # app.tv_client was swapped out from under us (a
+                # reconfigure elsewhere replaced it with a fresh, not-yet-
+                # connected client) — forget any stale "connected" state
+                # so we actually attempt the new client instead of
+                # trusting a flag that describes the old one.
+                self.connected = False
+                last_client = tv_client
             if not self.connected:
                 try:
                     await tv_client.connect()

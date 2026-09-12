@@ -2,10 +2,13 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from bscpylgtv.exceptions import PyLGTVCmdException, PyLGTVPairException
 
 from lg_remote.tv_client import (
+    DEFAULT_KEY_FILE_PATH,
     TVClient,
     TVConnectionError,
+    TVPairingRejectedError,
     TVPairingTimeoutError,
     TVTimeoutError,
     TVUnreachableError,
@@ -102,6 +105,52 @@ async def test_disconnect_clears_connected_state():
 async def test_disconnect_when_never_connected_is_a_no_op():
     tv = TVClient("192.168.1.10")
     await tv.disconnect()  # must not raise
+    assert tv.is_connected is False
+
+
+@pytest.mark.asyncio
+async def test_connect_passes_key_file_path_next_to_config():
+    fake_client = AsyncMock()
+    with _patched_create(fake_client) as create_mock:
+        tv = TVClient("192.168.1.10")
+        await tv.connect()
+
+    assert create_mock.await_args.kwargs["key_file_path"] == str(DEFAULT_KEY_FILE_PATH)
+
+
+@pytest.mark.asyncio
+async def test_pairing_rejected_raises_tv_pairing_rejected_and_stays_disconnected():
+    fake_client = AsyncMock()
+    fake_client.connect.side_effect = PyLGTVPairException("Unable to pair")
+    with _patched_create(fake_client):
+        tv = TVClient("192.168.1.10")
+        with pytest.raises(TVPairingRejectedError):
+            await tv.connect()
+
+    assert tv.is_connected is False
+    assert issubclass(TVPairingRejectedError, TVConnectionError)
+
+
+@pytest.mark.asyncio
+async def test_pairing_rejected_during_pairing_wait_raises_tv_pairing_rejected():
+    fake_client = AsyncMock()
+    fake_client.connect.side_effect = PyLGTVPairException("Unable to pair")
+    with _patched_create(fake_client):
+        tv = TVClient("192.168.1.10")
+        with pytest.raises(TVPairingRejectedError):
+            await tv.connect_with_pairing()
+
+    assert tv.is_connected is False
+
+
+@pytest.mark.asyncio
+async def test_command_failure_wraps_exception_and_invalidates_client():
+    tv, fake_client = _connected_client()
+    fake_client.button.side_effect = PyLGTVCmdException("Not connected")
+
+    with pytest.raises(TVConnectionError):
+        await tv.home()
+
     assert tv.is_connected is False
 
 

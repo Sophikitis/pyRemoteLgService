@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen, Screen
-from textual.widgets import Button, Static, Switch
+from textual.widgets import Button, Footer, Static, Switch
 
 DANGER_WARNING = (
     "Ces commandes ne sont pas vérifiées contre du matériel réel et peuvent "
@@ -74,10 +74,24 @@ class SettingsScreen(Screen):
                 yield Static(DANGER_WARNING, classes="help-text")
             yield Static("Journal des commandes", classes="section-title")
             yield Static("", id="log-panel")
+        yield Footer()
 
     def on_mount(self) -> None:
         self.query_one("#danger-zone").display = False
         self._refresh_log()
+
+    def on_screen_resume(self) -> None:
+        # Reached after popping back from Reconfigurer l'IP — the IP and
+        # the client the log reads from may both have changed underneath
+        # this screen, which was never recomposed to know that.
+        self._refresh_current_ip()
+        self._refresh_log()
+
+    def _refresh_current_ip(self) -> None:
+        config = self.app.config
+        self.query_one("#current-ip", Static).update(
+            f"IP actuelle : {config.tv_ip if config else 'non configurée'}"
+        )
 
     def on_switch_changed(self, event: Switch.Changed) -> None:
         if event.switch.id != "danger-toggle":
