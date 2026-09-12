@@ -116,13 +116,14 @@ Header {
 
 #vol-channel-row {
     layout: horizontal;
-    height: 9;
+    height: auto;
     padding: 1 2;
     background: $surface;
 }
 
 #vol-channel-row Vertical {
     width: 1fr;
+    height: auto;
     align: center middle;
     border: round $secondary;
     margin: 0 1;

@@ -154,6 +154,25 @@ async def test_no_tv_client_configured_leaves_status_disconnected():
 
 
 @pytest.mark.asyncio
+async def test_vol_down_and_ch_down_are_not_clipped_by_their_column():
+    app = _HostApp(tv_client=_fake_tv_client(), config=None)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        for button_id, column_id in (
+            ("#vol-down", "#vol-up"),
+            ("#ch-down", "#ch-up"),
+        ):
+            button = app.screen.query_one(button_id)
+            column = app.screen.query_one(column_id).parent
+            # The bottom button's box must be fully inside its column's
+            # own box — a column too short for its 3 buttons clips the
+            # last one out of view instead of raising an error.
+            assert button.region.y + button.region.height <= (
+                column.region.y + column.region.height
+            )
+
+
+@pytest.mark.asyncio
 async def test_keypad_shown_by_default_with_no_config():
     app = _HostApp(tv_client=_fake_tv_client(), config=None)
     async with app.run_test() as pilot:
