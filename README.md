@@ -61,6 +61,10 @@ chaque changement d'IP.
   avertissement), `c` ouvre les Réglages (dont "Reconfigurer l'IP").
 - Flèches, Entrée, `+`/`-`, `m` : navigation, OK, volume, muet — en plus du
   clic souris.
+- Chaque écran affiche un pied de page (Footer) listant ses raccourcis
+  clavier disponibles.
+- Thème : [Catppuccin Mocha](https://catppuccin.com/), un thème intégré à
+  Textual (`app.theme`).
 
 ## Limitations connues
 

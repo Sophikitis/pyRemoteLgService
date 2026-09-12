@@ -30,11 +30,12 @@ class ServiceScreen(Screen):
     BINDINGS = [Binding("escape", "pop_screen", "Retour")]
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="service-form"):
+        with Vertical(id="service-form") as form:
+            form.border_title = "⚠ Menu service"
             yield Static(WARNING_TEXT, classes="error-text")
             yield Button("IN-START", id="in-start", variant="primary")
             yield Button("EZ-ADJUST", id="ez-adjust", variant="primary")
-            yield Button("EXIT (sortir du menu)", id="service-exit", variant="success")
+            yield Button("⏏ EXIT (sortir du menu)", id="service-exit", variant="success")
         yield Footer()
 
     def action_pop_screen(self) -> None:

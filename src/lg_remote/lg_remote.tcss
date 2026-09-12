@@ -3,13 +3,19 @@ Screen {
     color: $text;
 }
 
+Header {
+    background: $panel;
+    color: $text;
+}
+
 #status-bar {
     dock: top;
     height: 3;
     padding: 0 2;
-    background: $panel;
+    background: $boost;
     border: round $primary;
     content-align: left middle;
+    text-style: bold;
 }
 
 #status-bar.-connected {
@@ -45,7 +51,9 @@ Screen {
     layout: horizontal;
     height: 5;
     align: center middle;
-    padding: 1 2;
+    padding: 0 1;
+    border: round $primary-darken-1;
+    background: $surface;
 }
 
 #top-row Button, #quick-apps-row Button {
@@ -53,18 +61,35 @@ Screen {
     height: 3;
     margin: 0 1;
     border: round $primary;
+    text-style: bold;
+}
+
+#top-row Button:hover, #quick-apps-row Button:hover {
+    border: round $accent;
 }
 
 #dpad {
     align: center middle;
     height: auto;
-    padding: 1 2;
+    padding: 0 1;
+    border: round $primary-darken-1;
+    background: $surface;
 }
 
 #dpad Button {
     border: round $primary;
     min-width: 7;
     margin: 0 1;
+    text-style: bold;
+}
+
+#dpad Button:hover {
+    border: round $accent;
+}
+
+#dpad #dpad-ok {
+    min-width: 9;
+    text-style: bold;
 }
 
 #dpad Horizontal {
@@ -76,6 +101,7 @@ Screen {
     layout: horizontal;
     height: 9;
     padding: 1 2;
+    background: $surface;
 }
 
 #vol-channel-row Vertical {
@@ -90,10 +116,20 @@ Screen {
     height: 3;
 }
 
+#vol-channel-row Button:hover {
+    border: round $accent;
+}
+
 #setup-form, #service-form, #settings-form, #confirm-box {
     padding: 1 2;
     border: round $primary;
+    background: $surface;
     margin: 1 2;
+}
+
+#setup-title, #settings-title {
+    text-style: bold;
+    padding: 0 0 1 0;
 }
 
 #ip-input {
@@ -103,6 +139,7 @@ Screen {
 
 .danger-zone {
     border: round $error;
+    background: $surface;
     padding: 1 2;
     margin: 1 0;
 }
@@ -115,6 +152,21 @@ Screen {
 #log-panel {
     height: 8;
     border: round $secondary;
+    background: $surface;
     padding: 1;
     overflow-y: auto;
+}
+
+#confirm-box {
+    align: center middle;
+}
+
+#confirm-box Horizontal {
+    align: center middle;
+    height: auto;
+    padding: 1 0 0 0;
+}
+
+#confirm-box Button {
+    margin: 0 1;
 }

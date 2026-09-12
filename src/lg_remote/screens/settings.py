@@ -50,7 +50,8 @@ class SettingsScreen(Screen):
         self.app.pop_screen()
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="settings-form"):
+        with Vertical(id="settings-form") as form:
+            form.border_title = "⚙ Réglages"
             yield Static("Réglages", id="settings-title")
             config = self.app.config
             yield Static(
@@ -63,7 +64,8 @@ class SettingsScreen(Screen):
                 classes="section-title",
             )
             yield Switch(value=False, id="danger-toggle")
-            with Vertical(id="danger-zone", classes="danger-zone"):
+            with Vertical(id="danger-zone", classes="danger-zone") as danger_zone:
+                danger_zone.border_title = "☠ Zone dangereuse"
                 for button_id in DANGER_BUTTON_IDS:
                     yield Button(
                         DANGER_LABELS[button_id],
@@ -72,8 +74,9 @@ class SettingsScreen(Screen):
                         variant="error",
                     )
                 yield Static(DANGER_WARNING, classes="help-text")
-            yield Static("Journal des commandes", classes="section-title")
-            yield Static("", id="log-panel")
+            log_panel = Static("", id="log-panel")
+            log_panel.border_title = "📜 Journal des commandes"
+            yield log_panel
         yield Footer()
 
     def on_mount(self) -> None:

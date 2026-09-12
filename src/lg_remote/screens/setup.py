@@ -42,7 +42,8 @@ class SetupScreen(Screen):
         self.app.pop_screen()
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="setup-form"):
+        with Vertical(id="setup-form") as form:
+            form.border_title = "📡 Configuration"
             yield Static("Configuration de la télécommande LG", id="setup-title")
             yield Static(HELP_TEXT, classes="help-text")
             yield Input(placeholder="192.168.1.42", id="ip-input")

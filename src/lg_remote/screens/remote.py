@@ -58,12 +58,14 @@ class RemoteScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Static("", id="status-bar")
-        with Horizontal(id="top-row"):
-            yield Button("Power", id="power", variant="error")
-            yield Button("Home", id="home")
-            yield Button("Back", id="back")
-            yield Button("Exit", id="exit")
-        with Vertical(id="dpad"):
+        with Horizontal(id="top-row") as top_row:
+            top_row.border_title = "TV"
+            yield Button("⏻ Power", id="power", variant="error")
+            yield Button("⌂ Home", id="home")
+            yield Button("↩ Back", id="back")
+            yield Button("⏏ Exit", id="exit")
+        with Vertical(id="dpad") as dpad:
+            dpad.border_title = "Navigation"
             yield Button("▲", id="nav-up")
             with Horizontal():
                 yield Button("◀", id="nav-left")
@@ -72,16 +74,17 @@ class RemoteScreen(Screen):
             yield Button("▼", id="nav-down")
         with Horizontal(id="vol-channel-row"):
             with Vertical():
-                yield Button("Vol +", id="vol-up")
-                yield Button("Mute", id="mute")
-                yield Button("Vol -", id="vol-down")
+                yield Button("🔊 Vol +", id="vol-up")
+                yield Button("🔇 Mute", id="mute")
+                yield Button("🔉 Vol -", id="vol-down")
             with Vertical():
-                yield Button("Ch +", id="ch-up")
-                yield Button("Info", id="info")
-                yield Button("Ch -", id="ch-down")
-        with Horizontal(id="quick-apps-row"):
-            yield Button("Netflix", id="netflix")
-            yield Button("Source", id="input-source")
+                yield Button("📺 Ch +", id="ch-up")
+                yield Button("ℹ Info", id="info")
+                yield Button("📺 Ch -", id="ch-down")
+        with Horizontal(id="quick-apps-row") as quick_apps_row:
+            quick_apps_row.border_title = "Raccourcis"
+            yield Button("▶ Netflix", id="netflix")
+            yield Button("⇄ Source", id="input-source")
         yield Footer()
 
     def on_mount(self) -> None:

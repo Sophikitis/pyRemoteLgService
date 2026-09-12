@@ -12,6 +12,7 @@ class LGRemoteApp(App):
 
     def __init__(self, config: Config | None, force_setup: bool = False) -> None:
         super().__init__()
+        self.theme = "catppuccin-mocha"
         self.config = config
         self.force_setup = force_setup
         self.tv_client: TVClient | None = (
