@@ -3,6 +3,16 @@
 Télécommande TUI (Textual) pour une TV LG webOS sur le réseau local, basée
 sur [`bscpylgtv`](https://github.com/chros73/bscpylgtv).
 
+## ⚠ Phase bêta
+
+Ce projet est en phase bêta. Au lancement, l'app affiche un écran
+d'avertissement à valider avant de continuer : le menu **Service** et les
+**commandes protégées** (IN-STOP, NVM, Factory Reset, White Balance...)
+peuvent avoir des conséquences **irréversibles** sur la TV (dérèglement ou
+dommage du calibrage de la dalle) si tu ne sais pas précisément ce qu'ils
+font. N'utilise ces fonctions que si tu es certain·e de leur effet — voir
+aussi "Limitations connues" plus bas.
+
 ## Installation
 
 Ce projet s'installe dans un environnement virtuel Python (venv), pour ne
@@ -76,4 +86,6 @@ chaque changement d'IP.
   Balance) : ces boutons existent dans les Réglages mais restent
   **désactivés**. Leurs payloads exacts n'ont pas été vérifiés contre du
   matériel réel — les activer sans confirmation externe pourrait dérégler
-  le calibrage de l'écran.
+  le calibrage de l'écran. Idem pour le menu Service (IN-START, EZ-ADJUST) :
+  ce sont des menus d'usine, pas des réglages utilisateur normaux — voir
+  "Phase bêta" plus haut.

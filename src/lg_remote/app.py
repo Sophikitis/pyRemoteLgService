@@ -20,6 +20,11 @@ class LGRemoteApp(App):
         )
 
     def on_mount(self) -> None:
+        from .screens.beta import BetaWarningScreen
+
+        self.push_screen(BetaWarningScreen(), self._show_initial_screen)
+
+    def _show_initial_screen(self, _result: None = None) -> None:
         if self.config is None:
             from .screens.setup import SetupScreen
 
