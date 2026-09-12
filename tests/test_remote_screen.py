@@ -5,6 +5,7 @@ import pytest
 from textual.app import App
 from textual.widgets import Static
 
+from lg_remote.config import Config
 from lg_remote.screens.remote import RemoteScreen
 from lg_remote.tv_client import TVConnectionError
 
@@ -129,9 +130,78 @@ async def test_pressing_button_while_disconnected_notifies_instead_of_sending():
 
 
 @pytest.mark.asyncio
+async def test_dpad_up_and_down_are_centered_over_ok_button():
+    app = _HostApp(tv_client=_fake_tv_client(), config=None)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        ok = app.screen.query_one("#dpad-ok")
+        up = app.screen.query_one("#nav-up")
+        down = app.screen.query_one("#nav-down")
+        ok_center = ok.region.x + ok.region.width / 2
+        up_center = up.region.x + up.region.width / 2
+        down_center = down.region.x + down.region.width / 2
+        assert up_center == pytest.approx(ok_center, abs=1)
+        assert down_center == pytest.approx(ok_center, abs=1)
+
+
+@pytest.mark.asyncio
 async def test_no_tv_client_configured_leaves_status_disconnected():
     app = _HostApp(tv_client=None, config=None)
     async with app.run_test() as pilot:
         await pilot.pause()
         status = app.screen.query_one("#status-bar", Static)
         assert "injoignable" in str(status.render())
+
+
+@pytest.mark.asyncio
+async def test_keypad_shown_by_default_with_no_config():
+    app = _HostApp(tv_client=_fake_tv_client(), config=None)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        keypad = app.screen.query_one("#keypad")
+        assert keypad.display is True
+
+
+@pytest.mark.asyncio
+async def test_keypad_hidden_when_config_disables_numbers():
+    config = Config(tv_ip="192.168.1.42", numbers_enabled=False)
+    app = _HostApp(tv_client=_fake_tv_client(), config=config)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        keypad = app.screen.query_one("#keypad")
+        assert keypad.display is False
+
+
+@pytest.mark.asyncio
+async def test_keypad_hides_live_after_disabling_numbers_in_settings(tmp_path):
+    from unittest.mock import patch
+
+    from lg_remote.screens.settings import SettingsScreen
+
+    config = Config(tv_ip="192.168.1.42")
+    app = _HostApp(tv_client=_fake_tv_client(), config=config)
+    with patch(
+        "lg_remote.screens.settings.DEFAULT_CONFIG_PATH", tmp_path / "config.toml"
+    ):
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            app.push_screen(SettingsScreen())
+            await pilot.pause()
+            switch = app.screen.query_one("#numbers-toggle")
+            switch.toggle()
+            await pilot.pause()
+            await pilot.press("escape")
+            await pilot.pause()
+            assert isinstance(app.screen, RemoteScreen)
+            assert app.screen.query_one("#keypad").display is False
+
+
+@pytest.mark.asyncio
+async def test_pressing_num_5_sends_digit_5_to_tv_client():
+    tv_client = _fake_tv_client()
+    app = _HostApp(tv_client=tv_client, config=None)
+    async with app.run_test(size=(100, 60)) as pilot:
+        await pilot.pause()
+        await pilot.click("#num-5")
+        await pilot.pause()
+    tv_client.number.assert_awaited_once_with("5")

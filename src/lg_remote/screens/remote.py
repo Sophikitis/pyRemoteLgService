@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Awaitable, Callable
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Grid, Horizontal, Vertical
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
-from ..tv_client import TVConnectionError
+from ..tv_client import TVClient, TVConnectionError
 
 RECONNECT_INTERVAL_SECONDS = 5
+NUMBER_BUTTON_PREFIX = "num-"
 
 BUTTON_TO_METHOD = {
     "power": "power",
@@ -64,14 +66,17 @@ class RemoteScreen(Screen):
             yield Button("⌂ Home", id="home")
             yield Button("↩ Back", id="back")
             yield Button("⏏ Exit", id="exit")
-        with Vertical(id="dpad") as dpad:
+        with Grid(id="dpad") as dpad:
             dpad.border_title = "Navigation"
+            yield Static()
             yield Button("▲", id="nav-up")
-            with Horizontal():
-                yield Button("◀", id="nav-left")
-                yield Button("OK", id="dpad-ok", variant="success")
-                yield Button("▶", id="nav-right")
+            yield Static()
+            yield Button("◀", id="nav-left")
+            yield Button("OK", id="dpad-ok", variant="success")
+            yield Button("▶", id="nav-right")
+            yield Static()
             yield Button("▼", id="nav-down")
+            yield Static()
         with Horizontal(id="vol-channel-row"):
             with Vertical():
                 yield Button("🔊 Vol +", id="vol-up")
@@ -81,6 +86,13 @@ class RemoteScreen(Screen):
                 yield Button("📺 Ch +", id="ch-up")
                 yield Button("ℹ Info", id="info")
                 yield Button("📺 Ch -", id="ch-down")
+        with Grid(id="keypad") as keypad:
+            keypad.border_title = "Numérique"
+            for digit in "123456789":
+                yield Button(digit, id=f"num-{digit}")
+            yield Static()
+            yield Button("0", id="num-0")
+            yield Static()
         with Horizontal(id="quick-apps-row") as quick_apps_row:
             quick_apps_row.border_title = "Raccourcis"
             yield Button("▶ Netflix", id="netflix")
@@ -89,6 +101,18 @@ class RemoteScreen(Screen):
 
     def on_mount(self) -> None:
         self.run_worker(self._connect_and_watch(), exclusive=True, group="connection")
+        self._refresh_keypad_visibility()
+
+    def on_screen_resume(self) -> None:
+        # Reached after popping back from Réglages — numbers_enabled may
+        # have just been toggled there, and this screen was never
+        # recomposed to know that.
+        self._refresh_keypad_visibility()
+
+    def _refresh_keypad_visibility(self) -> None:
+        config = self.app.config
+        numbers_enabled = True if config is None else config.numbers_enabled
+        self.query_one("#keypad").display = numbers_enabled
 
     async def _connect_and_watch(self) -> None:
         last_client = None
@@ -151,20 +175,35 @@ class RemoteScreen(Screen):
             self._dispatch(event.button.id)
 
     def _dispatch(self, button_id: str) -> None:
+        if button_id.startswith(NUMBER_BUTTON_PREFIX):
+            digit = button_id[len(NUMBER_BUTTON_PREFIX):]
+            self.run_worker(self._send_number(digit), group="tv-command")
+            return
         method_name = BUTTON_TO_METHOD.get(button_id)
         if method_name is None:
             return
         self.run_worker(self._send(method_name), group="tv-command")
 
     async def _send(self, method_name: str) -> None:
+        await self._run_tv_command(
+            lambda tv_client: getattr(tv_client, method_name)(),
+            method_name.replace("_", " "),
+        )
+
+    async def _send_number(self, digit: str) -> None:
+        await self._run_tv_command(lambda tv_client: tv_client.number(digit), f"chiffre {digit}")
+
+    async def _run_tv_command(
+        self, call: Callable[[TVClient], Awaitable[None]], notify_label: str
+    ) -> None:
         tv_client = self.app.tv_client
         if tv_client is None or not self.connected:
             self.app.notify("TV injoignable", severity="warning")
             return
         try:
-            await getattr(tv_client, method_name)()
+            await call(tv_client)
         except TVConnectionError:
             self.connected = False
             self.app.notify("TV injoignable", severity="error")
             return
-        self.app.notify(method_name.replace("_", " "), timeout=1.5)
+        self.app.notify(notify_label, timeout=1.5)

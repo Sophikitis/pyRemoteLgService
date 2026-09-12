@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Footer, Static, Switch
+
+from ..config import DEFAULT_CONFIG_PATH
 
 DANGER_WARNING = (
     "Ces commandes ne sont pas vérifiées contre du matériel réel et peuvent "
@@ -50,7 +52,7 @@ class SettingsScreen(Screen):
         self.app.pop_screen()
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="settings-form") as form:
+        with VerticalScroll(id="settings-form") as form:
             form.border_title = "⚙ Réglages"
             yield Static("Réglages", id="settings-title")
             config = self.app.config
@@ -59,6 +61,11 @@ class SettingsScreen(Screen):
                 id="current-ip",
             )
             yield Button("Reconfigurer l'IP", id="reconfigure-button", variant="primary")
+            yield Static("Pavé numérique (0-9)", classes="section-title")
+            yield Switch(
+                value=config.numbers_enabled if config else True,
+                id="numbers-toggle",
+            )
             yield Static(
                 "Commandes protégées (IN-STOP, NVM, Factory Reset, White Balance)",
                 classes="section-title",
@@ -97,6 +104,9 @@ class SettingsScreen(Screen):
         )
 
     def on_switch_changed(self, event: Switch.Changed) -> None:
+        if event.switch.id == "numbers-toggle":
+            self._set_numbers_enabled(event.value)
+            return
         if event.switch.id != "danger-toggle":
             return
         if event.value:
@@ -114,6 +124,13 @@ class SettingsScreen(Screen):
             from .setup import SetupScreen
 
             self.app.push_screen(SetupScreen(initial=False))
+
+    def _set_numbers_enabled(self, enabled: bool) -> None:
+        config = self.app.config
+        if config is None:
+            return
+        config.numbers_enabled = enabled
+        config.save(DEFAULT_CONFIG_PATH)
 
     def _refresh_log(self) -> None:
         tv_client = self.app.tv_client

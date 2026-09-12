@@ -88,6 +88,25 @@ async def test_toggling_danger_switch_asks_for_confirmation():
 
 
 @pytest.mark.asyncio
+async def test_confirming_danger_toggle_gives_the_zone_nonzero_height():
+    app = _HostApp(tv_client=AsyncMock())
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app.push_screen(SettingsScreen())
+        await pilot.pause()
+        switch = app.screen.query_one("#danger-toggle", Switch)
+        switch.toggle()
+        await pilot.pause()
+        await pilot.click("#confirm")
+        await pilot.pause()
+        danger_zone = app.screen.query_one("#danger-zone")
+        # A zero-height container clips its children to nothing, even
+        # though each Button still reports its own non-zero region —
+        # this is what "zero buttons visible" looks like from the inside.
+        assert danger_zone.size.height > 0
+
+
+@pytest.mark.asyncio
 async def test_confirming_danger_toggle_reveals_zone_but_buttons_stay_disabled():
     app = _HostApp(tv_client=AsyncMock())
     async with app.run_test() as pilot:
@@ -143,6 +162,60 @@ async def test_reconfiguring_refreshes_current_ip_on_resume(tmp_path):
             assert isinstance(app.screen, SettingsScreen)
             current_ip = app.screen.query_one("#current-ip", Static)
             assert "192.168.9.9" in str(current_ip.render())
+
+
+@pytest.mark.asyncio
+async def test_numbers_toggle_reflects_config_enabled_by_default():
+    app = _HostApp(tv_client=AsyncMock())
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app.push_screen(SettingsScreen())
+        await pilot.pause()
+        switch = app.screen.query_one("#numbers-toggle", Switch)
+        assert switch.value is True
+
+
+@pytest.mark.asyncio
+async def test_toggling_numbers_switch_off_updates_and_saves_config(tmp_path):
+    config_path = tmp_path / "config.toml"
+    app = _HostApp(tv_client=AsyncMock())
+    with patch("lg_remote.screens.settings.DEFAULT_CONFIG_PATH", config_path):
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            app.push_screen(SettingsScreen())
+            await pilot.pause()
+            switch = app.screen.query_one("#numbers-toggle", Switch)
+            switch.toggle()
+            await pilot.pause()
+    assert app.config.numbers_enabled is False
+    assert Config.load(config_path).numbers_enabled is False
+
+
+@pytest.mark.asyncio
+async def test_settings_form_scrolls_to_reveal_content_below_the_fold():
+    app = _HostApp(tv_client=AsyncMock())
+    async with app.run_test(size=(100, 24)) as pilot:
+        await pilot.pause()
+        app.push_screen(SettingsScreen())
+        await pilot.pause()
+        switch = app.screen.query_one("#danger-toggle", Switch)
+        switch.toggle()
+        await pilot.pause()
+        await pilot.click("#confirm")
+        await pilot.pause()
+
+        form = app.screen.query_one("#settings-form")
+        screen_height = app.screen.size.height
+
+        danger_button = app.screen.query_one("#danger-nvm", Button)
+        form.scroll_to_widget(danger_button, animate=False)
+        await pilot.pause()
+        assert 0 <= danger_button.region.y < screen_height
+
+        log_panel = app.screen.query_one("#log-panel", Static)
+        form.scroll_to_widget(log_panel, animate=False)
+        await pilot.pause()
+        assert 0 <= log_panel.region.y < screen_height
 
 
 @pytest.mark.asyncio

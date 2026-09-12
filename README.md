@@ -71,6 +71,9 @@ chaque changement d'IP.
   avertissement), `c` ouvre les Réglages (dont "Reconfigurer l'IP").
 - Flèches, Entrée, `+`/`-`, `m` : navigation, OK, volume, muet — en plus du
   clic souris.
+- Pavé numérique (0-9) : affiché par défaut sous la navigation. Se
+  désactive depuis Réglages ("Pavé numérique (0-9)"), à réactiver de la
+  même façon.
 - Chaque écran affiche un pied de page (Footer) listant ses raccourcis
   clavier disponibles.
 - Thème : [Catppuccin Mocha](https://catppuccin.com/), un thème intégré à

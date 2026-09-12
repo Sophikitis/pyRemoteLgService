@@ -69,6 +69,10 @@ Header {
 }
 
 #dpad {
+    layout: grid;
+    grid-size: 3 3;
+    grid-columns: 9;
+    grid-rows: 3;
     align: center middle;
     height: auto;
     padding: 0 1;
@@ -77,9 +81,9 @@ Header {
 }
 
 #dpad Button {
+    width: 100%;
+    height: 100%;
     border: round $primary;
-    min-width: 7;
-    margin: 0 1;
     text-style: bold;
 }
 
@@ -87,14 +91,27 @@ Header {
     border: round $accent;
 }
 
-#dpad #dpad-ok {
-    min-width: 9;
+#keypad {
+    layout: grid;
+    grid-size: 3 4;
+    grid-columns: 9;
+    grid-rows: 3;
+    align: center middle;
+    height: auto;
+    padding: 0 1;
+    border: round $primary-darken-1;
+    background: $surface;
+}
+
+#keypad Button {
+    width: 100%;
+    height: 100%;
+    border: round $primary;
     text-style: bold;
 }
 
-#dpad Horizontal {
-    align: center middle;
-    height: 3;
+#keypad Button:hover {
+    border: round $accent;
 }
 
 #vol-channel-row {
@@ -138,6 +155,7 @@ Header {
 }
 
 .danger-zone {
+    height: auto;
     border: round $error;
     background: $surface;
     padding: 1 2;
